@@ -1,0 +1,23 @@
+<monitor>
+    <name>SonicMQMonitor</name>
+    <type>managed</type>
+    <description>SonicMQ monitor</description>
+    <monitor-configuration></monitor-configuration>
+    <monitor-run-task>
+        <execution-style>periodic</execution-style>
+        <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+        <name>SonicMQ Monitor Run Task</name>
+        <display-name>SonicMQ Monitor Task</display-name>
+        <description>SonicMQ Monitor Task</description>
+        <type>java</type>
+        <execution-timeout-in-secs>60</execution-timeout-in-secs>
+        <task-arguments>
+            <!-- config file-->
+            <argument name="config-file" is-required="true" default-value="monitors/SonicmqMonitor/config.yml" />
+        </task-arguments>
+        <java-task>
+            <classpath>sonicmq-monitoring-extension.jar;lib</classpath>
+            <impl-class>com.appdynamics.extensions.sonicmq.SonicMqMonitor</impl-class>
+        </java-task>
+    </monitor-run-task>
+</monitor>

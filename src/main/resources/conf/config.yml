@@ -1,0 +1,16 @@
+#location for eg. tcp://localhost:2506
+location: ""
+
+username: ""
+
+password: ""
+
+brokerDomain: ""
+
+containerDomain: ""
+
+#prefix used to show up metrics in AppDynamics
+metricPrefix: "Custom Metrics|SonicMq|"
+
+#JMX timeout in seconds
+timeout: 10
