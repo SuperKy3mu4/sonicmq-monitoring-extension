@@ -87,12 +87,12 @@ Note : Please make sure to not use tab (\t) while editing yaml files. You may wa
 
 
 2. Paste the following SonicMQ jars in the `monitors/SonicmqMonitor/lib` directory
-   broker.jar
-   mfcontext.jar
-   mgmt_client.jar
-   sonic_Client.jar
-   sonic_Crypto.jar
-   sonic_mgmt_client.jar
+   * broker.jar
+   * mfcontext.jar
+   * mgmt_client.jar
+   * sonic_Client.jar
+   * sonic_Crypto.jar
+   * sonic_mgmt_client.jar
 
 3. Configure the path to the config.yml file by editing the <task-arguments> in the monitor.xml file in the `<MACHINE_AGENT_HOME>/monitors/CassandraMonitor/` directory. Below is the sample
 
