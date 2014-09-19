@@ -56,7 +56,7 @@ For eg.
 ## Installation ##
 
 1. Run "mvn clean install" and find the SonicmqMonitor.zip file in the "target" folder. You can also download the SonicmqMonitor.zip from [AppDynamics Exchange][].
-2. Unzip as "CassandraMonitor" and copy the "CassandraMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
+2. Unzip as "SonicmqMonitor" and copy the "SonicmqMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
 
 
 ## Configuration ##
@@ -94,7 +94,7 @@ Note : Please make sure to not use tab (\t) while editing yaml files. You may wa
    * sonic_Crypto.jar
    * sonic_mgmt_client.jar
 
-3. Configure the path to the config.yml file by editing the <task-arguments> in the monitor.xml file in the `<MACHINE_AGENT_HOME>/monitors/CassandraMonitor/` directory. Below is the sample
+3. Configure the path to the config.yml file by editing the <task-arguments> in the monitor.xml file in the `<MACHINE_AGENT_HOME>/monitors/SonicmqMonitor/` directory. Below is the sample
 
      ```
      <task-arguments>
