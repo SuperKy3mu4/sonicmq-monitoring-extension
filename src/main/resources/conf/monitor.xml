@@ -16,7 +16,7 @@
             <argument name="config-file" is-required="true" default-value="monitors/SonicmqMonitor/config.yml" />
         </task-arguments>
         <java-task>
-            <classpath>sonicmq-monitoring-extension.jar;lib</classpath>
+            <classpath>sonicmq-monitoring-extension.jar;lib/broker.jar;lib/mfcontext.jar;lib/mgmt_client.jar;lib/sonic_Client.jar;lib/sonic_Crypto.jar;lib/sonic_mgmt_client.jar</classpath>
             <impl-class>com.appdynamics.extensions.sonicmq.SonicMqMonitor</impl-class>
         </java-task>
     </monitor-run-task>
