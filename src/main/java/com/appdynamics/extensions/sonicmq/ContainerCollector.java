@@ -1,6 +1,7 @@
 package com.appdynamics.extensions.sonicmq;
 
 
+import com.appdynamics.extensions.sonicmq.config.BrokerConfig;
 import com.appdynamics.extensions.sonicmq.config.Configuration;
 import com.appdynamics.extensions.util.MetricUtils;
 import com.google.common.base.Strings;
@@ -16,11 +17,11 @@ import org.apache.log4j.Logger;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ContainerCollector extends Collector{
 
-    private Configuration config;
     private static final Logger logger = Logger.getLogger(ContainerCollector.class);
 
     private static final IMetricIdentity[] metricIds = new IMetricIdentity[] {
@@ -32,28 +33,28 @@ public class ContainerCollector extends Collector{
             IAgentProxy.SYSTEM_THREADS_POOLWAITS_METRIC_ID
     };
 
-    public ContainerCollector(Configuration config){
-        this.config = config;
-    }
 
 
-    public Map<String, String> getMetrics() {
+
+    public Map<String, String> getMetrics(Configuration config) {
         logger.debug("Getting metrics from Container. ");
         Map<String,String> metrics = new HashMap<String, String>();
-        try{
+
+        try {
             //connect JMX
-            connect(config.getLocation(),config.getUsername(),config.getPassword(),config.getTimeout());
-            IAgentProxy proxy = getProxy(client,new ObjectName(config.getContainerDomain()));
-            proxy.enableMetrics(metricIds);
-            IMetric[] data = proxy.getMetricsData(metricIds, false).getMetrics();
-            for(IMetric m : data) {
-                String metricName = getMetricName(m.getMetricIdentity());
-                if(!Strings.isNullOrEmpty(metricName)) {
-                    metrics.put(metricName, MetricUtils.toWholeNumberString(m.getValue()));
+            connect(config.getLocation(), config.getUsername(), config.getPassword(), config.getTimeout());
+            List<BrokerConfig> brokers = config.getBrokers();
+            if (brokers != null) {
+                for (BrokerConfig aBrokerConfig : brokers) {
+                    try {
+                        IAgentProxy proxy = getProxy(client, new ObjectName(aBrokerConfig.getContainer().getObjectName()));
+                        proxy.enableMetrics(metricIds);
+                        setContainerMetrics(proxy, aBrokerConfig, metrics);
+                    } catch (MalformedObjectNameException e) {
+                        logger.error("Failed to create proxy for id '" + aBrokerConfig.getContainer().getObjectName() + "': " + e);
+                    }
                 }
             }
-        } catch (MalformedObjectNameException e) {
-            logger.error("Failed to create proxy for id '"+ config.getContainerDomain() +"': "+e.getMessage());
         }
         finally{
             disconnect(config.getLocation());
@@ -68,4 +69,16 @@ public class ContainerCollector extends Collector{
         return MFProxyFactory.createAgentProxy(client, jmxName);
     }
 
+    private void setContainerMetrics(IAgentProxy proxy,BrokerConfig aBrokerConfig,Map<String,String> metrics) {
+        IMetric[] data = proxy.getMetricsData(metricIds, false).getMetrics();
+        for(IMetric m : data) {
+            String metricName = getMetricName(m.getMetricIdentity());
+            if(!Strings.isNullOrEmpty(metricName)) {
+                metricName = aBrokerConfig.getDisplayName() + Collector.METRIC_SEPARATOR + "container" + Collector.METRIC_SEPARATOR + aBrokerConfig.getContainer().getDisplayName() + Collector.METRIC_SEPARATOR + metricName;
+                metrics.put(metricName, MetricUtils.toWholeNumberString(m.getValue()));
+            }
+        }
+    }
+
 }
+

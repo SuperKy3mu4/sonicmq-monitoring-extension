@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.appdynamics.extensions</groupId>
-    <artifactId>sonicmq-monitoring-extension</artifactId>
+    <artifactId>sonicmq-broker-monitoring-extension</artifactId>
     <version>1.0.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-        <target.dir>${project.build.directory}/SonicmqMonitor</target.dir>
+        <target.dir>${project.build.directory}/SonicmqBrokerMonitor</target.dir>
         <sonicmq.version>8.5.1</sonicmq.version>
     </properties>
 
@@ -170,7 +170,7 @@
                                     <fileset dir="${build.directory}" includes="${project.artifactId}.${project.packaging}"/>
                                 </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
-                                    <zipfileset dir="${target.dir}" filemode="755" prefix="SonicmqMonitor/"/>
+                                    <zipfileset dir="${target.dir}" filemode="755" prefix="SonicmqBrokerMonitor/"/>
                                 </zip>
                                 <delete dir="${target.dir}"/>
                             </target>
@@ -208,7 +208,7 @@
         </repository>
     </repositories>
     <scm>
-        <connection>scm:git:https://github.com/Appdynamics/sonicmq-monitoring-extension.git</connection>
+        <connection>scm:git:https://github.com/Appdynamics/sonicmq-broker-monitoring-extension.git</connection>
     </scm>
 
 </project>

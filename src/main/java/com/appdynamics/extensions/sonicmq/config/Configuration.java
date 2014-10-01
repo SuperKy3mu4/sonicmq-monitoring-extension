@@ -1,23 +1,23 @@
 package com.appdynamics.extensions.sonicmq.config;
 
 
+import java.util.List;
+
 public class Configuration {
 
     private String location;
     private String username;
     private String password;
-    private String brokerDomain;
-    private String containerDomain;
+    private List<BrokerConfig> brokers;
     private int timeout;
-
     private String metricPrefix;
 
-    public String getBrokerDomain() {
-        return brokerDomain;
+    public List<BrokerConfig> getBrokers() {
+        return brokers;
     }
 
-    public void setBrokerDomain(String brokerDomain) {
-        this.brokerDomain = brokerDomain;
+    public void setBrokers(List<BrokerConfig> brokers) {
+        this.brokers = brokers;
     }
 
     public String getLocation() {
@@ -50,14 +50,6 @@ public class Configuration {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
-    }
-
-    public String getContainerDomain() {
-        return containerDomain;
-    }
-
-    public void setContainerDomain(String containerDomain) {
-        this.containerDomain = containerDomain;
     }
 
     public String getMetricPrefix() {

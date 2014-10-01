@@ -5,12 +5,22 @@ username: ""
 
 password: ""
 
-brokerDomain: ""
+brokers:
+  - displayName: ""
+    objectName: ""
+    container:
+        objectName: ""
+        displayName: ""
 
-containerDomain: ""
+  - displayName: ""
+    objectName: ""
+    container:
+        objectName: ""
+        displayName: ""
+
 
 #prefix used to show up metrics in AppDynamics
 metricPrefix: "Custom Metrics|SonicMq|"
 
 #JMX timeout in seconds
-timeout: 10
+timeout: 30

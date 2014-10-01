@@ -13,7 +13,7 @@ public class MetricAggregator {
     private ContainerCollector containerCollector;
 
     public MetricAggregator(Configuration config){
-        this(new BrokerCollector(config),new ContainerCollector(config));
+        this(new BrokerCollector(),new ContainerCollector());
         this.config = config;
     }
 
@@ -24,8 +24,8 @@ public class MetricAggregator {
 
     public Map<String, String> getMetrics() {
         Map<String,String> metrics = new HashMap<String, String>();
-        metrics.putAll(brokerCollector.getMetrics());
-        metrics.putAll(containerCollector.getMetrics());
+        metrics.putAll(brokerCollector.getMetrics(config));
+        metrics.putAll(containerCollector.getMetrics(config));
         return metrics;
     }
 

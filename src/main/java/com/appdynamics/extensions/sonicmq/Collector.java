@@ -15,7 +15,7 @@ public abstract class Collector {
     public static final String DEFAULT_PASSWORD = "DefaultPassword";
     public static final String METRIC_SEPARATOR = "|";
     protected JMSConnectorClient client;
-    public static final Logger logger = Logger.getLogger(SonicMqMonitor.class);
+    public static final Logger logger = Logger.getLogger(SonicMqBrokerMonitor.class);
 
     public void connect(String location,String username,String password,int timeout)
     {
@@ -53,6 +53,7 @@ public abstract class Collector {
         if(metricIdentity != null && metricIdentity.getNameComponents()!= null && metricIdentity.getNameComponents().length == 3){
             return metricIdentity.getNameComponents()[0] + METRIC_SEPARATOR + metricIdentity.getNameComponents()[1] + METRIC_SEPARATOR + metricIdentity.getNameComponents()[2];
         }
+        logger.warn("Metric not found - " + metricIdentity.getName() + " ; Absolute Name = " + metricIdentity.getAbsoluteName());
         return "";
     }
 
