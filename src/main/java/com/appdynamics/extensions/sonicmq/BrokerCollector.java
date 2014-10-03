@@ -118,7 +118,8 @@ public class BrokerCollector extends Collector{
                     if(topics != null){
                         for(IDurableSubscriptionData topic : topics){
                             if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
-                                String topicMetricPrefix = aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "topics" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
+                                String topicMetricPrefix = aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "users" + METRIC_SEPARATOR +
+                                        user + METRIC_SEPARATOR + "topics" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
                                 metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
                                 metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
                             }
