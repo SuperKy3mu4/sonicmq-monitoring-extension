@@ -9,10 +9,19 @@ import java.io.FileNotFoundException;
 
 public class ConfigUtilTest {
 
-
+    private Configuration config;
     @Test
     public void canLoadConfigFile() throws FileNotFoundException {
-        Configuration config = YmlReader.readFromFile(this.getClass().getResource("/conf/config.yml").getFile(), Configuration.class);
+        config = YmlReader.readFromFile(this.getClass().getResource("/conf/config.yml").getFile(), Configuration.class);
         Assert.assertTrue(config != null);
+    }
+
+
+
+    @Test
+    public void canExcludeQueues() throws FileNotFoundException {
+        config = YmlReader.readFromFile(this.getClass().getResource("/conf/config.yml").getFile(), Configuration.class);
+        Assert.assertTrue("USERS.TemporaryQueues.container.SonicESB".matches(config.getQueueExcludePatterns().get(0)));
+
     }
 }

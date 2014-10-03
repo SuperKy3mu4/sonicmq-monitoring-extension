@@ -22,5 +22,21 @@ brokers:
 #prefix used to show up metrics in AppDynamics
 metricPrefix: "Custom Metrics|SonicMq|"
 
+
+#Comma Separated Regex patterns to exclude queues.
+queueExcludePatterns: [
+  ".*TemporaryQueues.*"
+]
+
+#Comma Separated Regex patterns to exclude users.
+userExcludePatterns: [
+
+]
+
+#Comma Separated Regex patterns to exclude durable subscriptions.
+topicExcludePatterns: [
+
+]
+
 #JMX timeout in seconds
 timeout: 30
