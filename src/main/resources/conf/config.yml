@@ -18,9 +18,15 @@ brokers:
         objectName: ""
         displayName: ""
 
+#prefix used to show up metrics in AppDynamics
+metricPrefix: "Custom Metrics|SonicMq|"
+
+#JMX timeout in seconds
+timeout: 30
+
 #Comma Separated Regex patterns to exclude queues.
 queueExcludePatterns: [
-  ".*TemporaryQueues.*"
+
 ]
 
 #Comma Separated Regex patterns to exclude users.
@@ -32,9 +38,3 @@ userExcludePatterns: [
 topicExcludePatterns: [
 
 ]
-
-#prefix used to show up metrics in AppDynamics
-metricPrefix: "Custom Metrics|SonicMq|"
-
-#JMX timeout in seconds
-timeout: 30
