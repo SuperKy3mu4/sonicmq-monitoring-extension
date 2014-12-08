@@ -51,7 +51,7 @@ public class ContainerCollector extends Collector{
                         proxy.enableMetrics(metricIds);
                         setContainerMetrics(proxy, aBrokerConfig, metrics);
                     } catch (MalformedObjectNameException e) {
-                        logger.error("Failed to create proxy for id '" + aBrokerConfig.getContainer().getObjectName() + "': " + e);
+                        logger.error("Failed to create proxy for id '" + aBrokerConfig.getContainer().getObjectName() + "': ", e);
                     }
                 }
             }
