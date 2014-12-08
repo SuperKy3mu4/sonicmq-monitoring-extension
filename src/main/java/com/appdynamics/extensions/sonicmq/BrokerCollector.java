@@ -93,10 +93,10 @@ public class BrokerCollector extends Collector{
 
                     }
                     catch (MalformedObjectNameException e) {
-                        logger.error("Failed to create proxy for id '"+ aBrokerConfig.getObjectName() +"': "+e);
+                        logger.error("Failed to create proxy for id '"+ aBrokerConfig.getObjectName() +"': ", e);
                     }
                     catch(Exception e){
-                        logger.error("Failed to fetch metrics for " + aBrokerConfig.getObjectName() + " : " + e);
+                        logger.error("Failed to fetch metrics for " + aBrokerConfig.getObjectName() + " : ", e);
                     }
                 }
             }
