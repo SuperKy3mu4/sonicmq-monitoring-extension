@@ -55,8 +55,15 @@ For eg.
 
 ## Installation ##
 
-1. Run "mvn clean install" and find the SonicmqMonitor.zip file in the "target" folder. You can also download the SonicmqMonitor.zip from [AppDynamics Exchange][].
-2. Unzip as "SonicmqMonitor" and copy the "SonicmqMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
+1. Copy the following jars to `src/lib`
+   * broker.jar
+   * mfcontext.jar
+   * mgmt_client.jar
+   * sonic_Client.jar
+   * sonic_Crypto.jar
+   * sonic_mgmt_client.jar
+2. Run "mvn clean install" and find the SonicmqMonitor.zip file in the "target" folder. You can also download the SonicmqMonitor.zip from [AppDynamics Exchange][].
+3. Unzip as "SonicmqMonitor" and copy the "SonicmqMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
 
 
 ## Configuration ##
