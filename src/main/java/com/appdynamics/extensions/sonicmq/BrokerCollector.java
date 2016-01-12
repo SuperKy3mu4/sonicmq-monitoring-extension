@@ -7,7 +7,11 @@ import com.appdynamics.extensions.util.MetricUtils;
 import com.google.common.base.Strings;
 import com.sonicsw.mf.common.metrics.IMetric;
 import com.sonicsw.mf.common.metrics.IMetricIdentity;
+import com.sonicsw.mf.common.runtime.IContainerState;
+import com.sonicsw.mf.common.runtime.IState;
 import com.sonicsw.mf.jmx.client.JMSConnectorClient;
+import com.sonicsw.mf.mgmtapi.runtime.IAgentManagerProxy;
+import com.sonicsw.mf.mgmtapi.runtime.MFProxyFactory;
 import com.sonicsw.mq.mgmtapi.runtime.IBrokerProxy;
 import com.sonicsw.mq.mgmtapi.runtime.MQProxyFactory;
 import org.slf4j.LoggerFactory;
@@ -15,6 +19,8 @@ import progress.message.ft.ReplicationState;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 public class BrokerCollector extends Collector{
@@ -65,38 +71,83 @@ public class BrokerCollector extends Collector{
         try{
             //connect JMX
             connect(config.getLocation(),config.getUsername(),config.getPassword(),config.getTimeout());
-            List<BrokerConfig> brokers = config.getBrokers();
-            if(brokers != null){
-                for(BrokerConfig aBrokerConfig : brokers){
-                    try {
+            //get default domain
+            long startTime = System.currentTimeMillis();
 
-                        IBrokerProxy proxy = getProxy(client, new ObjectName(aBrokerConfig.getObjectName()));
-
-                        metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "IsPrimary", getReplicationType(proxy));
-                        metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "IsActive",proxy.getState().toString());
-                        metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
-
-                        if(isReplicationStateActive(proxy)) {
-
-                            //set instance metrics
-                            setMetrics(proxy, aBrokerConfig, metrics, config.getQueueExcludePatterns());
-                        }
-
-                    }
-                    catch (MalformedObjectNameException e) {
-                        logger.error("Failed to create proxy for id '"+ aBrokerConfig.getObjectName() +"': "+e);
-                    }
-                    catch(Exception e){
-                        logger.error("Failed to fetch metrics for " + aBrokerConfig.getObjectName() + " : " + e);
-                    }
+            String domain = client.getDefaultDomain();
+            logger.info("The default domain is {}", domain);
+            String hostname = null;
+            hostname = getHostname();
+            logger.info("The hostname for this machine is {}",hostname);
+            IAgentManagerProxy agentManagerProxy = getAgentManagerProxy(client,domain);
+            IState[] containerStates = agentManagerProxy.getCollectiveState();
+            int i=1;
+            for (IState aContainerState : containerStates) {
+                IContainerState containerState = (IContainerState) aContainerState;
+                logger.info("*********Container Info # {} ********",i);
+                logger.info("Container Canonical Name = {}", containerState.getRuntimeIdentity().getCanonicalName());
+                logger.info("Container Name = {}", containerState.getRuntimeIdentity().getContainerName());
+                logger.info("Container Domain Name = {}", containerState.getRuntimeIdentity().getDomainName());
+                IState[] componentStates = containerState.getComponentStates();
+                int j=1;
+                for(IState aComponentState : componentStates){
+                    logger.info("\t*********Component Info # {} ********",j);
+                    logger.info("\tComponent Canonical Name = {}",aComponentState.getRuntimeIdentity().getCanonicalName());
+                    logger.info("\tComponent Container Name = {}",aComponentState.getRuntimeIdentity().getContainerName());
+                    String brId=aComponentState.getRuntimeIdentity().toString();
+                    String brokerName = brId.substring(brId.indexOf("=")+1);
+                    logger.info("\tBroker Name = {}",brokerName);
+                    j++;
                 }
+                i++;
             }
-        }
-        finally{
+
+            long endTime = System.currentTimeMillis();
+            logger.info("Total time taken to get list of all containers = {}", endTime - startTime);
+
+
+        } catch (MalformedObjectNameException e) {
+            logger.error("Something unknown happened",e);
+        } finally{
             disconnect(config.getLocation());
         }
-        logger.debug("Collected Broker metrics");
         return metrics;
+    }
+
+    private void getABrokerMetrics(Configuration config, Map<String, String> metrics,BrokerConfig aBrokerConfig) {
+        try {
+
+            IBrokerProxy proxy = getProxy(client, new ObjectName(aBrokerConfig.getObjectName()));
+
+            metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "IsPrimary", getReplicationType(proxy));
+            metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "IsActive",proxy.getState().toString());
+            metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
+
+            if(isReplicationStateActive(proxy)) {
+
+                //set instance metrics
+                setMetrics(proxy, aBrokerConfig, metrics, config.getQueueExcludePatterns());
+            }
+
+        }
+        catch (MalformedObjectNameException e) {
+            logger.error("Failed to create proxy for id '"+ aBrokerConfig.getObjectName() +"': "+e);
+        }
+        catch(Exception e){
+            logger.error("Failed to fetch metrics for " + aBrokerConfig.getObjectName() + " : " + e);
+        }
+    }
+
+    private String getHostname() {
+        String hostname;
+        try {
+            // See http://stackoverflow.com/questions/7348711/recommended-way-to-get-hostname-in-java
+            // for information on when this will fail.
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException needToAskSystem) {
+            hostname = null;
+        }
+        return hostname;
     }
 
 
@@ -164,6 +215,10 @@ public class BrokerCollector extends Collector{
 
     protected final IBrokerProxy getProxy(JMSConnectorClient client, ObjectName jmxName) {
         return MQProxyFactory.createBrokerProxy(client, jmxName);
+    }
+
+    protected final IAgentManagerProxy getAgentManagerProxy(JMSConnectorClient client,String domain) throws MalformedObjectNameException {
+        return MFProxyFactory.createAgentManagerProxy(client,new ObjectName(domain));
     }
 
 }
