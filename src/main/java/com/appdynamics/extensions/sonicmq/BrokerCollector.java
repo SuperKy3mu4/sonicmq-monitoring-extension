@@ -7,6 +7,7 @@ import com.appdynamics.extensions.util.MetricUtils;
 import com.google.common.base.Strings;
 import com.sonicsw.mf.common.metrics.IMetric;
 import com.sonicsw.mf.common.metrics.IMetricIdentity;
+import com.sonicsw.mf.common.runtime.IComponentState;
 import com.sonicsw.mf.common.runtime.IContainerState;
 import com.sonicsw.mf.common.runtime.IState;
 import com.sonicsw.mf.jmx.client.JMSConnectorClient;
@@ -74,8 +75,8 @@ public class BrokerCollector extends Collector{
             //get default domain
             long startTime = System.currentTimeMillis();
 
-            String domain = client.getDefaultDomain();
-            logger.info("The default domain is {}", domain);
+            String domain = "dmWdwMmp_Load2";
+            logger.info("The domain is {}", domain);
             String hostname = null;
             hostname = getHostname();
             logger.info("The hostname for this machine is {}",hostname);
@@ -91,9 +92,11 @@ public class BrokerCollector extends Collector{
                 IState[] componentStates = containerState.getComponentStates();
                 int j=1;
                 for(IState aComponentState : componentStates){
+                    IComponentState componentState = (IComponentState)aComponentState;
                     logger.info("\t*********Component Info # {} ********",j);
-                    logger.info("\tComponent Canonical Name = {}",aComponentState.getRuntimeIdentity().getCanonicalName());
-                    logger.info("\tComponent Container Name = {}",aComponentState.getRuntimeIdentity().getContainerName());
+                    logger.info("\tComponent Canonical Name = {}",componentState.getRuntimeIdentity().getCanonicalName());
+                    logger.info("\tComponent Container Name = {}",componentState.getRuntimeIdentity().getContainerName());
+                    logger.info("\tComponent Domain Name = {}",componentState.getRuntimeIdentity().getDomainName());
                     String brId=aComponentState.getRuntimeIdentity().toString();
                     String brokerName = brId.substring(brId.indexOf("=")+1);
                     logger.info("\tBroker Name = {}",brokerName);
