@@ -7,27 +7,21 @@ import com.appdynamics.extensions.util.MetricUtils;
 import com.google.common.base.Strings;
 import com.sonicsw.mf.common.metrics.IMetric;
 import com.sonicsw.mf.common.metrics.IMetricIdentity;
-import com.sonicsw.mf.common.runtime.IComponentState;
 import com.sonicsw.mf.jmx.client.JMSConnectorClient;
-import com.sonicsw.mq.common.runtime.IDurableSubscriptionData;
-import com.sonicsw.mq.common.runtime.IQueueData;
 import com.sonicsw.mq.mgmtapi.runtime.IBrokerProxy;
 import com.sonicsw.mq.mgmtapi.runtime.MQProxyFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import progress.message.ft.ReplicationState;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.*;
 
 public class BrokerCollector extends Collector{
 
     public static final String IsPrimary = "1";
     public static final String IsBackup = "0";
-    private static final Logger logger = Logger.getLogger(BrokerCollector.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(BrokerCollector.class);
 
     private static final IMetricIdentity[] metricIds = new IMetricIdentity[] {
 
@@ -75,20 +69,17 @@ public class BrokerCollector extends Collector{
             if(brokers != null){
                 for(BrokerConfig aBrokerConfig : brokers){
                     try {
+
                         IBrokerProxy proxy = getProxy(client, new ObjectName(aBrokerConfig.getObjectName()));
 
                         metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "IsPrimary", getReplicationType(proxy));
                         metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "IsActive",proxy.getState().toString());
                         metrics.put(aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
 
-                        if(isBrokerActive(proxy)) {
-                            proxy.enableMetrics(metricIds);
+                        if(isReplicationStateActive(proxy)) {
+
                             //set instance metrics
-                            setBrokerMetrics(proxy, aBrokerConfig, metrics);
-                            //set queue metrics
-                            setQueueMetrics(proxy, aBrokerConfig, metrics,config.getQueueExcludePatterns());
-                            //set topic metrics
-                            setTopicMetrics(proxy,aBrokerConfig,metrics,config.getUserExcludePatterns(),config.getTopicExcludePatterns());
+                            setMetrics(proxy, aBrokerConfig, metrics, config.getQueueExcludePatterns());
                         }
 
                     }
@@ -108,27 +99,6 @@ public class BrokerCollector extends Collector{
         return metrics;
     }
 
-    private void setTopicMetrics(IBrokerProxy proxy, BrokerConfig aBrokerConfig, Map<String, String> metrics,List<String> userExcludePatterns,List<String> topicExcludePatterns) {
-        //get topics for all users
-        List<String> users = proxy.getUsersWithDurableSubscriptions(null);
-        if(users != null){
-            for(String user : users){
-                if(!isExcluded(user, userExcludePatterns)){
-                    List<IDurableSubscriptionData> topics = proxy.getDurableSubscriptions(user);
-                    if(topics != null){
-                        for(IDurableSubscriptionData topic : topics){
-                            if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
-                                String topicMetricPrefix = aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "users" + METRIC_SEPARATOR +
-                                        user + METRIC_SEPARATOR + "topics" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
-                                metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
-                                metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     private boolean isExcluded(String element, List<String> excludePatterns) {
         if(excludePatterns != null) {
@@ -141,43 +111,56 @@ public class BrokerCollector extends Collector{
         return false;
     }
 
-    private boolean isBrokerActive(IBrokerProxy proxy) {
+/*    private boolean isBrokerActive(IBrokerProxy proxy) {
         return proxy.getState() == IComponentState.STATE_ONLINE;
+    }*/
+
+
+    private boolean isReplicationStateActive(IBrokerProxy proxy) {
+        return proxy.getReplicationState() == ReplicationState.ACTIVE;
     }
-
-
-    private void setQueueMetrics(IBrokerProxy proxy, BrokerConfig aBrokerConfig, Map<String, String> metrics,List<String> excludePatterns) {
-        ArrayList<IQueueData> queues = proxy.getQueues(null);
-        if(queues != null && queues.size() > 0){
-            for(IQueueData queue : queues){
-                if(!isExcluded(queue.getQueueName(), excludePatterns)) {
-                    String queueMetricPrefix = aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "queues" + METRIC_SEPARATOR + queue.getQueueName() + METRIC_SEPARATOR;
-                    metrics.put(queueMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(queue.getMessageCount()));
-                    metrics.put(queueMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(queue.getTotalMessageSize()));
-                }
-            }
-        }
-        logger.debug("Collected queue metrics.");
-    }
-
-
-
 
     private String getReplicationType(IBrokerProxy proxy) {
         return "PRIMARY".equals(proxy.getReplicationType()) ? IsPrimary : IsBackup;
     }
 
-    private void setBrokerMetrics(IBrokerProxy proxy,BrokerConfig aBrokerConfig ,Map<String, String> metrics) {
-        IMetric[] data = proxy.getMetricsData(metricIds, false).getMetrics();
+    private void setMetrics(IBrokerProxy proxy, BrokerConfig aBrokerConfig, Map<String, String> metrics, List<String> excludePatterns) {
+        //IMetricInfo[] metricInfo = proxy.getMetricsInfo();
+        /*logger.debug("*******Metric Details Start*********");
+        for(IMetricInfo info : metricInfo){
+            logger.debug("Metric Identity Name: " + info.getMetricIdentity().getName());
+            logger.debug("Metric Identity Absolute Name: " + info.getMetricIdentity().getAbsoluteName());
+            logger.debug("Metric Info Description: " + info.getDescription());
+            logger.debug("Metric Info Value Type: " + info.getValueType());
+            logger.debug("Metric Info Dynamic: " + info.isDynamic());
+            logger.debug("Metric Info Instance Metric: " + info.isInstanceMetric());
+        }*/
+        long startTime = System.currentTimeMillis();
+        IMetricIdentity[] activeMetrics = proxy.getActiveMetrics(metricIds);
+        long endTime = System.currentTimeMillis();
+        long duration1 = endTime - startTime;
+        logger.debug("Time to execute getActiveMetrics call = {}",duration1);
+
+        startTime = System.currentTimeMillis();
+        IMetric[] data = proxy.getMetricsData(activeMetrics, false).getMetrics();
+        endTime = System.currentTimeMillis();
+        long duration2 = endTime - startTime;
+        logger.debug("Time to execute getMetricsData call = {}",duration2);
+        logger.debug("Total time taken = {}",duration1 + duration2);
+
         for (IMetric m : data) {
             String metricName = getMetricName(m.getMetricIdentity());
-            if (!Strings.isNullOrEmpty(metricName)) {
+            if (!Strings.isNullOrEmpty(metricName) && !isExcluded(metricName,excludePatterns)) {
+                logger.debug("Metric Name : {} ,Metric Value : {}",metricName,m.getValue());
                 metricName = aBrokerConfig.getDisplayName() + Collector.METRIC_SEPARATOR + metricName;
                 metrics.put(metricName, MetricUtils.toWholeNumberString(m.getValue()));
             }
         }
+        logger.debug("*******Metric Details End*********");
         logger.debug("Collected basic broker metrics.");
     }
+
+
 
     protected final IBrokerProxy getProxy(JMSConnectorClient client, ObjectName jmxName) {
         return MQProxyFactory.createBrokerProxy(client, jmxName);

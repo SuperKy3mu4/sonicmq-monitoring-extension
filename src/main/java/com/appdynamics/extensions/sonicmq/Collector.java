@@ -1,11 +1,13 @@
 package com.appdynamics.extensions.sonicmq;
 
 
+import com.google.common.collect.Lists;
 import com.sonicsw.mf.common.metrics.IMetricIdentity;
 import com.sonicsw.mf.jmx.client.JMSConnectorAddress;
 import com.sonicsw.mf.jmx.client.JMSConnectorClient;
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 
 public abstract class Collector {
@@ -50,11 +52,22 @@ public abstract class Collector {
 
 
     public String getMetricName(IMetricIdentity metricIdentity) {
-        if(metricIdentity != null && metricIdentity.getNameComponents()!= null && metricIdentity.getNameComponents().length == 3){
-            return metricIdentity.getNameComponents()[0] + METRIC_SEPARATOR + metricIdentity.getNameComponents()[1] + METRIC_SEPARATOR + metricIdentity.getNameComponents()[2];
+        StringBuffer str = new StringBuffer();
+        if(metricIdentity != null && metricIdentity.getNameComponents() != null){
+            int len = metricIdentity.getNameComponents().length;
+            for(int i=0;i<len; i++){
+                str.append(metricIdentity.getNameComponents()[i]);
+                if(i < len - 1){
+                    str.append(METRIC_SEPARATOR);
+                }
+
+            }
+            return str.toString();
         }
-        logger.warn("Metric not found - " + metricIdentity.getName() + " ; Absolute Name = " + metricIdentity.getAbsoluteName());
+        logger.info ("Metric Name cannot be created from named components - " + metricIdentity.getName() + " ; Absolute Name = " + metricIdentity.getAbsoluteName());
         return "";
     }
+
+
 
 }

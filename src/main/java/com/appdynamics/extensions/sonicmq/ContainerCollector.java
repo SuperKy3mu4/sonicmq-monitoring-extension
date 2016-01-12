@@ -48,8 +48,8 @@ public class ContainerCollector extends Collector{
                 for (BrokerConfig aBrokerConfig : brokers) {
                     try {
                         IAgentProxy proxy = getProxy(client, new ObjectName(aBrokerConfig.getContainer().getObjectName()));
-                        proxy.enableMetrics(metricIds);
-                        setContainerMetrics(proxy, aBrokerConfig, metrics);
+                        //proxy.enableMetrics(metricIds);
+                        //setContainerMetrics(proxy, aBrokerConfig, metrics);
                     } catch (MalformedObjectNameException e) {
                         logger.error("Failed to create proxy for id '" + aBrokerConfig.getContainer().getObjectName() + "': " + e);
                     }

@@ -1,27 +1,22 @@
 #location for eg. tcp://localhost:2506
 location: ""
 
-username: ""
+username: "container"
 
-password: ""
+password: "container"
 
 brokers:
-  - displayName: "broker1"
-    objectName: "Broker1Obj"
+  - displayName: ""
+    objectName: ""
     container:
-        objectName: "container1Obj"
-        displayName: "container1Name"
+        objectName: ""
+        displayName: ""
 
-  - displayName: "broker2"
-    objectName: "Broker2Obj"
+  - displayName: ""
+    objectName: ""
     container:
-        objectName: "container2Obj"
-        displayName: "container2Name"
-
-
-#prefix used to show up metrics in AppDynamics
-metricPrefix: "Custom Metrics|SonicMq|"
-
+        objectName: ""
+        displayName: ""
 
 #Comma Separated Regex patterns to exclude queues.
 queueExcludePatterns: [
@@ -37,6 +32,9 @@ userExcludePatterns: [
 topicExcludePatterns: [
 
 ]
+
+#prefix used to show up metrics in AppDynamics
+metricPrefix: "Custom Metrics|SonicMq|"
 
 #JMX timeout in seconds
 timeout: 30

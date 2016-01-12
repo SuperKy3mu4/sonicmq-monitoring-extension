@@ -2,18 +2,25 @@ package com.appdynamics.extensions.sonicmq;
 
 
 import com.appdynamics.extensions.PathResolver;
+import com.appdynamics.extensions.crypto.CryptoUtil;
+import com.appdynamics.extensions.file.FileLoader;
 import com.appdynamics.extensions.sonicmq.config.Configuration;
 import com.appdynamics.extensions.yml.YmlReader;
+import com.google.common.collect.Maps;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Map;
+
+import static com.appdynamics.TaskInputArgs.ENCRYPTION_KEY;
+import static com.appdynamics.TaskInputArgs.PASSWORD_ENCRYPTED;
 
 /**
  * This extension will extract metrics from Sonic MQ.
@@ -21,46 +28,72 @@ import java.util.Map;
 
 public class SonicMqBrokerMonitor extends AManagedMonitor{
 
-    public static final Logger logger = Logger.getLogger(SonicMqBrokerMonitor.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SonicMqBrokerMonitor.class);
     public static final String METRIC_SEPARATOR = "|";
     public static final String CONFIG_ARG = "config-file";
-
+    private volatile boolean initialized;
+    private Configuration config;
 
     public SonicMqBrokerMonitor() {
-        String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
-        logger.info(msg);
-        System.out.println(msg);
+        System.out.println(logVersion());
     }
 
     public TaskOutput execute(Map<String, String> taskArgs, TaskExecutionContext taskExecutionContext) throws TaskExecutionException {
-        if (taskArgs != null) {
-            logger.info( "Starting the SonicMQ Monitoring task.");
-            logger.debug("Task Arguments Passed ::" + taskArgs);
-            String configFilename = taskArgs.get(CONFIG_ARG);
-            try {
-                File configFile = PathResolver.getFile(configFilename, AManagedMonitor.class);
-                if(configFile == null){
-                    throw new FileNotFoundException();
-                }
-                //read the config.
-                Configuration config = YmlReader.readFromFile(configFile,Configuration.class);
-                final MetricAggregator metricAggregator = new MetricAggregator(config);
-                Map<String,String> metrics = metricAggregator.getMetrics();
-                printMetrics(config,metrics);
-                
-                logger.info("SonicMQ monitoring task completed successfully.");
-                return new TaskOutput("SonicMQ monitoring task completed successfully.");
-            } catch (FileNotFoundException e) {
-                logger.error("Config file not found :: " + configFilename, e);
-            } catch(YmlReader.InvalidYmlPathException iype){
-                logger.error("Cannot read YAML file ::" + configFilename,iype);
-            } catch (Exception e) {
-                logger.error("Metrics collection failed", e);
-            }
+        try {
+            initialize(taskArgs);
+            final BrokerCollector brokerCollector = new BrokerCollector();
+            Map<String,String> metrics = brokerCollector.getMetrics(config);
+            printMetrics(config, metrics);
+            logger.info("SonicMQ monitor run completed successfully.");
+            return new TaskOutput("SonicMQ monitor run completed successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Metrics collection failed", e);
         }
-        throw new TaskExecutionException("SonicMQ monitoring task completed with failures.");
+        throw new TaskExecutionException("SonicMQ monitoring run completed with failures.");
+
     }
 
+
+    private void initialize(Map<String, String> taskArgs) {
+        if(!initialized){
+            //read the config.
+            final String configFilePath = taskArgs.get(CONFIG_ARG);
+            File configFile = PathResolver.getFile(configFilePath, AManagedMonitor.class);
+            if(configFile != null && configFile.exists()){
+                FileLoader.load(new FileLoader.Listener() {
+                    public void load(File file) {
+                        String path = file.getAbsolutePath();
+                        try {
+                            if (path.contains(configFilePath)) {
+                                logger.info("The file [{}] has changed, reloading the config", file.getAbsolutePath());
+                                reloadConfig(file);
+                            } else {
+                                logger.warn("Unknown file [{}] changed, ignoring", file.getAbsolutePath());
+                            }
+                        } catch (Exception e) {
+                            logger.error("Exception while reloading the file " + file.getAbsolutePath(), e);
+                        }
+                    }
+                }, configFilePath);
+            }
+            else{
+                logger.error("Config file is not found.The config file path {} is resolved to {}",
+                        taskArgs.get(CONFIG_ARG), configFile != null ? configFile.getAbsolutePath() : null);
+            }
+            initialized = true;
+        }
+    }
+
+    private void reloadConfig(File file) {
+        config = YmlReader.readFromFile(file, Configuration.class);
+        if (config != null) {
+            logger.info("The config file was reloaded successfully.");
+        }
+        else {
+            throw new IllegalArgumentException("The config cannot be initialized from the file " + file.getAbsolutePath());
+        }
+    }
     private void printMetrics(Configuration config,Map<String, String> metrics) {
         for(Map.Entry<String,String> entry : metrics.entrySet()){
             printAverageAverageIndividual(config.getMetricPrefix() + entry.getKey(), entry.getValue());
@@ -76,6 +109,12 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
         );
     }
 
+
+    private String logVersion() {
+        String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
+        logger.info(msg);
+        return msg;
+    }
 
     /**
      * A helper method to report the metrics.

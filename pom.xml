@@ -6,7 +6,7 @@
 
     <groupId>com.appdynamics.extensions</groupId>
     <artifactId>sonicmq-broker-monitoring-extension</artifactId>
-    <version>1.0.0</version>
+    <version>3.0.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>
-            <version>1.0.9</version>
+            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
