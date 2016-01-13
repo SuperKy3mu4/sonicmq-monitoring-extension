@@ -8,6 +8,7 @@ import com.google.common.base.Strings;
 import com.sonicsw.mf.common.metrics.IMetric;
 import com.sonicsw.mf.common.metrics.IMetricIdentity;
 import com.sonicsw.mf.jmx.client.JMSConnectorClient;
+import com.sonicsw.mq.common.runtime.IDurableSubscriptionData;
 import com.sonicsw.mq.mgmtapi.runtime.IBrokerProxy;
 import com.sonicsw.mq.mgmtapi.runtime.MQProxyFactory;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,7 @@ public class BrokerCollector extends Collector{
 
                             //set instance metrics
                             setMetrics(proxy, aBrokerConfig, metrics, config.getQueueExcludePatterns());
+                            setTopicMetrics(proxy,aBrokerConfig,metrics,config.getUserExcludePatterns(),config.getTopicExcludePatterns());
                         }
 
                     }
@@ -99,6 +101,27 @@ public class BrokerCollector extends Collector{
         return metrics;
     }
 
+    private void setTopicMetrics(IBrokerProxy proxy, BrokerConfig aBrokerConfig, Map<String, String> metrics,List<String> userExcludePatterns,List<String> topicExcludePatterns) {
+        //get topics for all users
+        List<String> users = proxy.getUsersWithDurableSubscriptions(null);
+        if(users != null){
+            for(String user : users){
+                if(!isExcluded(user, userExcludePatterns)){
+                    List<IDurableSubscriptionData> topics = proxy.getDurableSubscriptions(user);
+                    if(topics != null){
+                        for(IDurableSubscriptionData topic : topics){
+                            if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
+                                String topicMetricPrefix = aBrokerConfig.getDisplayName() + METRIC_SEPARATOR + "users" + METRIC_SEPARATOR +
+                                        user + METRIC_SEPARATOR + "topics" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
+                                metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
+                                metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private boolean isExcluded(String element, List<String> excludePatterns) {
         if(excludePatterns != null) {
