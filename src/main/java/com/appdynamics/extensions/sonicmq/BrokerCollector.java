@@ -221,7 +221,9 @@ public class BrokerCollector extends Collector{
     }
 
     protected final IAgentManagerProxy getAgentManagerProxy(JMSConnectorClient client,String domain) throws MalformedObjectNameException {
-        return MFProxyFactory.createAgentManagerProxy(client,new ObjectName(domain));
+        ObjectName jmxName = new ObjectName(domain + "." + IAgentManagerProxy.GLOBAL_ID + ":ID=" + IAgentManagerProxy.GLOBAL_ID);
+        return MFProxyFactory.createAgentManagerProxy(client, jmxName);
     }
+
 
 }
