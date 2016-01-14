@@ -86,10 +86,11 @@ public class BrokerCollector extends Collector{
                 logger.debug("*********Container Info # {} ********", i);
                 logger.debug("Container Canonical Name = {}", containerState.getRuntimeIdentity().getCanonicalName());
                 logger.debug("Container Name = {}", containerState.getRuntimeIdentity().getContainerName());
-                String containerName = containerState.getRuntimeIdentity().getContainerName();
                 logger.debug("Container Domain Name = {}", containerState.getRuntimeIdentity().getDomainName());
+                String containerHost = containerState.getContainerHost();
+                logger.debug("Container Host = {}", containerHost);
                 IState[] componentStates = containerState.getComponentStates();
-                if(containerName.equalsIgnoreCase(hostname)) {
+                if(containerHost.equalsIgnoreCase(hostname)) {
                     int j=1;
                     for (IState aComponentState : componentStates) {
                         IComponentState componentState = (IComponentState) aComponentState;
@@ -138,10 +139,10 @@ public class BrokerCollector extends Collector{
 
         }
         catch (MalformedObjectNameException e) {
-            logger.error("Failed to create proxy for id '"+ brokerJmxName +"': "+e);
+            logger.error("Failed to create proxy for id '"+ brokerJmxName,e);
         }
         catch(Exception e){
-            logger.error("Failed to fetch metrics for " + brokerJmxName + " : " + e);
+            logger.error("Failed to fetch metrics for " + brokerJmxName,e);
         }
     }
 
@@ -187,7 +188,8 @@ public class BrokerCollector extends Collector{
                     if(topics != null){
                         for(IDurableSubscriptionData topic : topics){
                             if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
-                                String topicMetricPrefix = brokerName + METRIC_SEPARATOR + "durable_subscriptions" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
+                                String topicMetricPrefix = brokerName + METRIC_SEPARATOR + "users" + METRIC_SEPARATOR +
+                                        user + METRIC_SEPARATOR + "topics" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
                                 metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
                                 metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
                             }
