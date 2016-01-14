@@ -126,7 +126,10 @@ public class BrokerCollector {
     }
 
     private String getCanonicalHostName(String containerHost) {
-        return containerHost.substring(0,containerHost.indexOf("."));
+        if(containerHost.indexOf(".") != -1){
+            return containerHost.substring(0,containerHost.indexOf("."));
+        }
+        return containerHost;
     }
 
     private void getABrokerMetrics(JMSConnectorClient client,Configuration config, String brokerJmxName,String brokerName,Map<String, String> metrics) {
