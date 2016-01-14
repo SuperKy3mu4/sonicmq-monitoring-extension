@@ -6,6 +6,7 @@ import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.file.FileLoader;
 import com.appdynamics.extensions.sonicmq.config.Configuration;
 import com.appdynamics.extensions.yml.YmlReader;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
@@ -31,6 +32,7 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SonicMqBrokerMonitor.class);
     public static final String METRIC_SEPARATOR = "|";
     public static final String CONFIG_ARG = "config-file";
+    public static final String TIER_NAME = "appdynamics.agent.tierName";
     private volatile boolean initialized;
     private Configuration config;
 
@@ -81,7 +83,22 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
                 logger.error("Config file is not found.The config file path {} is resolved to {}",
                         taskArgs.get(CONFIG_ARG), configFile != null ? configFile.getAbsolutePath() : null);
             }
+            setMetricPrefix();
             initialized = true;
+        }
+    }
+
+    private void setMetricPrefix() {
+        String prefix = config.getMetricPrefix();
+        if(!Strings.isNullOrEmpty(prefix)){
+            String tierName = System.getProperty(TIER_NAME);
+            if(!Strings.isNullOrEmpty(tierName)){
+                prefix = prefix.replaceFirst("<TIER_NAME>",tierName);
+                config.setMetricPrefix(prefix);
+            }
+        }
+        else {
+            config.setMetricPrefix("Custom Metrics|SonicMq|");
         }
     }
 
