@@ -83,7 +83,7 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
                 logger.error("Config file is not found.The config file path {} is resolved to {}",
                         taskArgs.get(CONFIG_ARG), configFile != null ? configFile.getAbsolutePath() : null);
             }
-            setMetricPrefix();
+
             initialized = true;
         }
     }
@@ -105,6 +105,7 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
     private void reloadConfig(File file) {
         config = YmlReader.readFromFile(file, Configuration.class);
         if (config != null) {
+            setMetricPrefix();
             logger.info("The config file was reloaded successfully.");
         }
         else {

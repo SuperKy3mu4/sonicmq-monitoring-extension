@@ -24,7 +24,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
-public class BrokerCollector extends Collector{
+import static com.appdynamics.extensions.util.metrics.MetricConstants.METRICS_SEPARATOR;
+
+public class BrokerCollector {
 
     public static final String IsPrimary = "1";
     public static final String IsBackup = "0";
@@ -69,9 +71,10 @@ public class BrokerCollector extends Collector{
     public Map<String, String> getMetrics(Configuration config) {
         logger.debug("Getting metrics from Broker. ");
         Map<String,String> metrics = new HashMap<String, String>();
+        JMSConnectorClient client = new JMSConnectorClient();
         try{
             //connect JMX
-            connect(config.getLocation(),config.getUsername(),config.getPassword(),config.getTimeout());
+            ConnectionUtil.connect(client,config.getLocation(),config.getUsername(),config.getPassword(),config.getTimeout());
             //get default domain
             long startTime = System.currentTimeMillis();
             String domain = config.getDomain();
@@ -88,6 +91,7 @@ public class BrokerCollector extends Collector{
                 logger.debug("Container Name = {}", containerState.getRuntimeIdentity().getContainerName());
                 logger.debug("Container Domain Name = {}", containerState.getRuntimeIdentity().getDomainName());
                 String containerHost = containerState.getContainerHost();
+                containerHost = getCanonicalHostName(containerHost);
                 logger.debug("Container Host = {}", containerHost);
                 IState[] componentStates = containerState.getComponentStates();
                 if(containerHost.equalsIgnoreCase(hostname)) {
@@ -102,7 +106,7 @@ public class BrokerCollector extends Collector{
                         String brId = aComponentState.getRuntimeIdentity().toString();
                         String brokerName = brId.substring(brId.indexOf("=") + 1);
                         logger.debug("\tBroker Name = {}", brokerName);
-                        getABrokerMetrics(config,brokerJmxName,brokerName,metrics);
+                        getABrokerMetrics(client,config,brokerJmxName,brokerName,metrics);
                         j++;
                     }
                 }
@@ -110,25 +114,29 @@ public class BrokerCollector extends Collector{
             }
 
             long endTime = System.currentTimeMillis();
-            logger.info("Total time taken to get list of all containers = {}", endTime - startTime);
+            logger.debug("Total time taken to get list of all containers = {}", endTime - startTime);
 
 
         } catch (MalformedObjectNameException e) {
             logger.error("Something unknown happened",e);
         } finally{
-            disconnect(config.getLocation());
+            ConnectionUtil.disconnect(client, config.getLocation());
         }
         return metrics;
     }
 
-    private void getABrokerMetrics(Configuration config, String brokerJmxName,String brokerName,Map<String, String> metrics) {
+    private String getCanonicalHostName(String containerHost) {
+        return containerHost.substring(0,containerHost.indexOf("."));
+    }
+
+    private void getABrokerMetrics(JMSConnectorClient client,Configuration config, String brokerJmxName,String brokerName,Map<String, String> metrics) {
         try {
 
             IBrokerProxy proxy = getBrokerProxy(client, brokerJmxName);
 
-            metrics.put(brokerName + METRIC_SEPARATOR + "IsPrimary", getReplicationType(proxy));
-            metrics.put(brokerName + METRIC_SEPARATOR + "IsActive",proxy.getState().toString());
-            metrics.put(brokerName + METRIC_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
+            metrics.put(brokerName + METRICS_SEPARATOR + "IsPrimary", getReplicationType(proxy));
+            metrics.put(brokerName + METRICS_SEPARATOR + "IsActive",proxy.getState().toString());
+            metrics.put(brokerName + METRICS_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
 
             if(isReplicationStateActive(proxy)) {
 
@@ -188,8 +196,8 @@ public class BrokerCollector extends Collector{
                     if(topics != null){
                         for(IDurableSubscriptionData topic : topics){
                             if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
-                                String topicMetricPrefix = brokerName + METRIC_SEPARATOR + "users" + METRIC_SEPARATOR +
-                                        user + METRIC_SEPARATOR + "topics" + METRIC_SEPARATOR + topic.getTopicName() + METRIC_SEPARATOR;
+                                String topicMetricPrefix = brokerName + METRICS_SEPARATOR + "users" + METRICS_SEPARATOR +
+                                        user + METRICS_SEPARATOR + "topics" + METRICS_SEPARATOR + topic.getTopicName() + METRICS_SEPARATOR;
                                 metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
                                 metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
                             }
@@ -218,7 +226,7 @@ public class BrokerCollector extends Collector{
             String metricName = getMetricName(m.getMetricIdentity());
             if (!Strings.isNullOrEmpty(metricName) && !isExcluded(metricName,excludePatterns)) {
                 logger.debug("Metric Name : {} ,Metric Value : {}",metricName,m.getValue());
-                metricName = brokerName + Collector.METRIC_SEPARATOR + metricName;
+                metricName = brokerName + METRICS_SEPARATOR + metricName;
                 metrics.put(metricName, MetricUtils.toWholeNumberString(m.getValue()));
             }
         }
@@ -226,7 +234,13 @@ public class BrokerCollector extends Collector{
         logger.debug("Collected basic broker metrics.");
     }
 
-
+    public String getMetricName(IMetricIdentity metricIdentity) {
+        if(metricIdentity != null && metricIdentity.getNameComponents()!= null && metricIdentity.getNameComponents().length == 3){
+            return metricIdentity.getNameComponents()[0] + METRICS_SEPARATOR + metricIdentity.getNameComponents()[1] + METRICS_SEPARATOR + metricIdentity.getNameComponents()[2];
+        }
+        logger.warn("Metric not found - " + metricIdentity.getName() + " ; Absolute Name = " + metricIdentity.getAbsoluteName());
+        return "";
+    }
 
     protected final IBrokerProxy getBrokerProxy(JMSConnectorClient client, String jmxName) throws MalformedObjectNameException {
         return MQProxyFactory.createBrokerProxy(client, new ObjectName(jmxName));
