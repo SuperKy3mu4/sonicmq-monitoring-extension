@@ -8,20 +8,12 @@ public class Configuration {
     private String location;
     private String username;
     private String password;
-    private List<BrokerConfig> brokers;
     private int timeout;
     private List<String> queueExcludePatterns;
     private List<String> userExcludePatterns;
     private List<String> topicExcludePatterns;
     private String metricPrefix;
-
-    public List<BrokerConfig> getBrokers() {
-        return brokers;
-    }
-
-    public void setBrokers(List<BrokerConfig> brokers) {
-        this.brokers = brokers;
-    }
+    private String domain;
 
     public String getLocation() {
         return location;
@@ -85,5 +77,13 @@ public class Configuration {
 
     public void setTopicExcludePatterns(List<String> topicExcludePatterns) {
         this.topicExcludePatterns = topicExcludePatterns;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 }

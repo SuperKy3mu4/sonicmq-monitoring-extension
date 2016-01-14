@@ -24,7 +24,6 @@ public abstract class Collector {
         if(client != null) {
             return;
         }
-
         logger.debug("Connecting to '"+ location+"'...");
         client = new JMSConnectorClient();
         Hashtable<String, String> env = new Hashtable<String, String>();

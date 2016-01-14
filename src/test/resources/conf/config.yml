@@ -1,26 +1,26 @@
+### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+
+#This will create this metric in all the tiers, under this path
+#metricPrefix: Custom Metrics|SonicMq|
+
+#This will create it in specific Tier. Replace <TIER_NAME>
+metricPrefix: Server|Component:<TIER_NAME>|Custom Metrics|SonicMq
+
 #location for eg. tcp://localhost:2506
 location: ""
 
-username: "container"
+username: ""
 
-password: "container"
+password: ""
 
-brokers:
-  - displayName: ""
-    objectName: ""
-    container:
-        objectName: ""
-        displayName: ""
+domain: ""
 
-  - displayName: ""
-    objectName: ""
-    container:
-        objectName: ""
-        displayName: ""
+#JMX timeout in seconds
+timeout: 30
 
 #Comma Separated Regex patterns to exclude queues.
 queueExcludePatterns: [
-  ".*TemporaryQueues.*"
+
 ]
 
 #Comma Separated Regex patterns to exclude users.
@@ -32,9 +32,3 @@ userExcludePatterns: [
 topicExcludePatterns: [
 
 ]
-
-#prefix used to show up metrics in AppDynamics
-metricPrefix: "Custom Metrics|SonicMq|"
-
-#JMX timeout in seconds
-timeout: 30

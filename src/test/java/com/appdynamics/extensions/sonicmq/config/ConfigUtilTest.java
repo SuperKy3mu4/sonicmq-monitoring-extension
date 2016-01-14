@@ -18,10 +18,5 @@ public class ConfigUtilTest {
 
 
 
-    @Test
-    public void canExcludeQueues() throws FileNotFoundException {
-        config = YmlReader.readFromFile(this.getClass().getResource("/conf/config.yml").getFile(), Configuration.class);
-        Assert.assertTrue("USERS.TemporaryQueues.container.SonicESB".matches(config.getQueueExcludePatterns().get(0)));
-
-    }
+    
 }
