@@ -1,3 +1,13 @@
+### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+
+#This will create this metric in all the tiers, under this path
+#metricPrefix: Custom Metrics|SonicMq|
+
+#This will create it in specific Tier. Replace <TIER_NAME>. If TIER_NAME is not specified, the extension will
+# also try to get the tierName from the JVM argument.
+metricPrefix: Server|Component:<TIER_NAME>|Custom Metrics|SonicMq
+
+
 #location for eg. tcp://localhost:2506
 location: ""
 
@@ -18,8 +28,6 @@ brokers:
         objectName: ""
         displayName: ""
 
-#prefix used to show up metrics in AppDynamics
-metricPrefix: "Custom Metrics|SonicMq|"
 
 #JMX timeout in seconds
 timeout: 30
