@@ -1,6 +1,7 @@
 package com.appdynamics.extensions.sonicmq.config;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Configuration {
@@ -14,6 +15,8 @@ public class Configuration {
     private List<String> topicExcludePatterns;
     private String metricPrefix;
     private String domain;
+
+    private List<BrokerConfig> brokerConfigs = new ArrayList<BrokerConfig>();
 
     public String getLocation() {
         return location;
@@ -86,4 +89,10 @@ public class Configuration {
     public void setDomain(String domain) {
         this.domain = domain;
     }
+
+    public List<BrokerConfig> getBrokerConfigs() {
+        return brokerConfigs;
+    }
+
+
 }
