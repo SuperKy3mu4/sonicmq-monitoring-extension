@@ -86,10 +86,10 @@ public class BrokerCollector extends Collector{
 
                     }
                     catch (MalformedObjectNameException e) {
-                        logger.error("Failed to create proxy for id '"+ aBrokerConfig.getObjectName() +"': "+e);
+                        logger.error("Failed to create proxy for id '"+ aBrokerConfig.getObjectName(),e);
                     }
                     catch(Exception e){
-                        logger.error("Failed to fetch metrics for " + aBrokerConfig.getObjectName() + " : " + e);
+                        logger.error("Failed to fetch metrics for " + aBrokerConfig.getObjectName(), e);
                     }
                 }
             }
@@ -148,16 +148,6 @@ public class BrokerCollector extends Collector{
     }
 
     private void setMetrics(IBrokerProxy proxy, BrokerConfig aBrokerConfig, Map<String, String> metrics, List<String> excludePatterns) {
-        //IMetricInfo[] metricInfo = proxy.getMetricsInfo();
-        /*logger.debug("*******Metric Details Start*********");
-        for(IMetricInfo info : metricInfo){
-            logger.debug("Metric Identity Name: " + info.getMetricIdentity().getName());
-            logger.debug("Metric Identity Absolute Name: " + info.getMetricIdentity().getAbsoluteName());
-            logger.debug("Metric Info Description: " + info.getDescription());
-            logger.debug("Metric Info Value Type: " + info.getValueType());
-            logger.debug("Metric Info Dynamic: " + info.isDynamic());
-            logger.debug("Metric Info Instance Metric: " + info.isInstanceMetric());
-        }*/
         long startTime = System.currentTimeMillis();
         IMetricIdentity[] activeMetrics = proxy.getActiveMetrics(metricIds);
         long endTime = System.currentTimeMillis();
