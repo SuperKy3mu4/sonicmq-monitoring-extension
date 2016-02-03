@@ -52,11 +52,9 @@ public class BrokerCollector {
 
             IBrokerProxy.QUEUE_MESSAGES_COUNT_METRIC_ID,
             IBrokerProxy.QUEUE_MESSAGES_DELIVEREDPERSECOND_METRIC_ID,
-            IBrokerProxy.QUEUE_MESSAGES_MAXAGE_METRIC_ID,
             IBrokerProxy.QUEUE_MESSAGES_MAXDEPTH_METRIC_ID,
             IBrokerProxy.QUEUE_MESSAGES_RECEIVEDPERSECOND_METRIC_ID,
             IBrokerProxy.QUEUE_MESSAGES_SIZE_METRIC_ID,
-            IBrokerProxy.QUEUE_MESSAGES_TIMEINQUEUE_METRIC_ID
     };
 
 
