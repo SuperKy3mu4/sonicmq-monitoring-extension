@@ -89,16 +89,15 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
 
     private void setMetricPrefix() {
         String prefix = config.getMetricPrefix();
-        if(!Strings.isNullOrEmpty(prefix)){
-            String tierName = System.getProperty(TIER_NAME);
-            if(!Strings.isNullOrEmpty(tierName)){
-                prefix = prefix.replaceFirst("<TIER_NAME>",tierName);
-                config.setMetricPrefix(prefix);
-            }
-        }
-        else {
+        if(Strings.isNullOrEmpty(prefix)) {
             config.setMetricPrefix("Custom Metrics|SonicMq|");
         }
+        String tierName = System.getProperty(TIER_NAME);
+        if(!Strings.isNullOrEmpty(tierName)){
+            prefix = prefix.replaceFirst("<TIER_NAME>",tierName);
+            config.setMetricPrefix(prefix);
+        }
+
     }
 
     private void reloadConfig(File file) {
