@@ -16,7 +16,11 @@ public class ConfigUtilTest {
         Assert.assertTrue(config != null);
     }
 
-
-
+    @Test
+    public void replaceTierNameInMetricPrefix() {
+        String prefix = "Server|Component:<TIER_NAME>|Custom Metrics|SonicMq";
+        prefix = prefix.replaceFirst("<TIER_NAME>","Hello");
+        Assert.assertTrue(prefix.equals("Server|Component:Hello|Custom Metrics|SonicMq"));
+    }
 
 }

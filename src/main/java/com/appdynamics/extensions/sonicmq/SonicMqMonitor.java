@@ -3,51 +3,62 @@ package com.appdynamics.extensions.sonicmq;
 
 import com.appdynamics.extensions.PathResolver;
 import com.appdynamics.extensions.file.FileLoader;
-import com.appdynamics.extensions.sonicmq.config.BrokerConfig;
+import com.appdynamics.extensions.sonicmq.config.ComponentConfig;
 import com.appdynamics.extensions.sonicmq.config.Configuration;
 import com.appdynamics.extensions.yml.YmlReader;
-import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
-import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+import com.sonicsw.ma.mgmtapi.config.MgmtException;
 import com.sonicsw.mf.common.runtime.IComponentState;
 import com.sonicsw.mf.common.runtime.IContainerState;
 import com.sonicsw.mf.common.runtime.IState;
 import com.sonicsw.mf.jmx.client.JMSConnectorClient;
+import com.sonicsw.mf.mgmtapi.config.IContainerBean;
 import com.sonicsw.mf.mgmtapi.runtime.IAgentManagerProxy;
+import com.sonicsw.mq.mgmtapi.config.MQMgmtBeanFactory;
+import com.sonicsw.mx.config.ConfigServiceException;
 import org.slf4j.LoggerFactory;
 
 import javax.management.MalformedObjectNameException;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
 
 /**
  * This extension will extract metrics from Sonic MQ.
  */
 
-public class SonicMqBrokerMonitor extends AManagedMonitor{
+public class SonicMqMonitor extends AManagedMonitor{
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SonicMqBrokerMonitor.class);
-    public static final String METRIC_SEPARATOR = "|";
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SonicMqMonitor.class);
     public static final String CONFIG_ARG = "config-file";
-    public static final String TIER_NAME = "appdynamics.agent.tierName";
+    public static final String BROKER = "MQ_BROKER";
+    public static final String CONTAINER = "MQ_CONTAINER";
     private volatile boolean initialized;
     private Configuration config;
 
-    public SonicMqBrokerMonitor() {
+    public SonicMqMonitor() {
         System.out.println(logVersion());
     }
 
     public TaskOutput execute(Map<String, String> taskArgs, TaskExecutionContext taskExecutionContext) throws TaskExecutionException {
         try {
             initialize(taskArgs);
-            final BrokerCollector brokerCollector = new BrokerCollector();
-            Map<String,String> metrics = brokerCollector.getMetrics(config);
-            printMetrics(config, metrics);
+            JMSConnectorClient client = new JMSConnectorClient();
+            try {
+                //connect JMX
+                JMSConnectionFactory.connect(client, config.getLocation(), config.getUsername(), config.getPassword(), config.getTimeout());
+                final BrokerCollector brokerCollector = new BrokerCollector(client,this);
+                brokerCollector.collectAndReport(config);
+                final ContainerCollector containerCollector = new ContainerCollector(client,this);
+                containerCollector.collectAndReport(config);
+            }
+            finally {
+                JMSConnectionFactory.disconnect(client, config.getLocation());
+            }
             logger.info("SonicMQ monitor run completed successfully.");
             return new TaskOutput("SonicMQ monitor run completed successfully.");
         } catch (Exception e) {
@@ -90,23 +101,9 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
         }
     }
 
-    private void setMetricPrefix() {
-        String prefix = config.getMetricPrefix();
-        if(Strings.isNullOrEmpty(prefix)) {
-            config.setMetricPrefix("Custom Metrics|SonicMq|");
-        }
-        String tierName = System.getProperty(TIER_NAME);
-        if(!Strings.isNullOrEmpty(tierName)){
-            prefix = prefix.replaceFirst("<TIER_NAME>",tierName);
-            config.setMetricPrefix(prefix);
-        }
-
-    }
-
-    private void reloadConfig(File file) {
+    private void reloadConfig(File file) throws MgmtException, ConfigServiceException {
         config = YmlReader.readFromFile(file, Configuration.class);
         if (config != null) {
-            setMetricPrefix();
             loadCollectiveState();
             logger.info("The config file was reloaded successfully.");
         }
@@ -115,16 +112,44 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
         }
     }
 
-    private void loadCollectiveState() {
+    private Map<String,String> buildTierMap() throws MgmtException, ConfigServiceException {
+        Map<String,String> tierMap = Maps.newHashMap();
+        MQMgmtBeanFactory factory = new MQMgmtBeanFactory();
+        try{
+            ManagementBeanFactory.connect(factory,config.getLocation(),config.getDomain(),config.getUsername(),config.getPassword());
+            List<String> containerBeanNames = factory.getContainerBeanNames();
+            logger.debug("*********Container Bean Info # ********");
+            for (String containerBean : containerBeanNames) {
+                IContainerBean container = factory.getContainerBean(containerBean);
+                String jvmArgs = container.getJvmArguments();
+                logger.debug("Container name {}",container.getContainerName());
+                logger.debug("JVM arguments are {}",jvmArgs);
+                String tierName = Util.getTierName(jvmArgs);
+                if(tierName != null){
+                    tierMap.put(container.getContainerName(), tierName);
+                }
+            }
+        }
+        finally{
+            ManagementBeanFactory.disconnect(factory);
+        }
+        return tierMap;
+    }
+
+
+
+    private void loadCollectiveState() throws MgmtException, ConfigServiceException {
+        Map<String,String> tierMap = buildTierMap();
+        config.setTierMap(tierMap);
         JMSConnectorClient client = new JMSConnectorClient();
         try{
             //connect JMX
-            ConnectionUtil.connect(client,config.getLocation(),config.getUsername(),config.getPassword(),config.getTimeout());
+            JMSConnectionFactory.connect(client, config.getLocation(), config.getUsername(), config.getPassword(), config.getTimeout());
             //get default domain
             long startTime = System.currentTimeMillis();
             String domain = config.getDomain();
             logger.debug("The domain is {}", domain);
-            String hostname = getHostname();
+            String hostname = Util.getHostname();
             logger.debug("The hostname for this machine is {}",hostname);
             IAgentManagerProxy agentManagerProxy = ProxyUtil.getAgentManagerProxy(client, domain);
             IState[] containerStates = agentManagerProxy.getCollectiveState();
@@ -144,15 +169,29 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
                     for (IState aComponentState : componentStates) {
                         IComponentState componentState = (IComponentState) aComponentState;
                         logger.debug("\t*********Component Info # {} ********", j);
-                        String brokerJmxName = componentState.getRuntimeIdentity().getCanonicalName();
-                        logger.debug("\tComponent Canonical Name = {}", brokerJmxName);
-                        logger.debug("\tComponent Container Name = {}", componentState.getRuntimeIdentity().getContainerName());
+                        String componentJmxName = componentState.getRuntimeIdentity().getCanonicalName();
+                        logger.debug("\tComponent Canonical Name = {}", componentJmxName);
+                        String componentContainerName = componentState.getRuntimeIdentity().getContainerName();
+                        logger.debug("\tComponent Container Name = {}", componentContainerName);
                         logger.debug("\tComponent Domain Name = {}", componentState.getRuntimeIdentity().getDomainName());
                         String brId = aComponentState.getRuntimeIdentity().toString();
-                        String brokerName = brId.substring(brId.indexOf("=") + 1);
-                        logger.debug("\tBroker Name = {}", brokerName);
-                        BrokerConfig brokerConfig = new BrokerConfig(brokerName,brokerJmxName);
-                        config.getBrokerConfigs().add(brokerConfig);
+                        String componentDisplayName = brId.substring(brId.indexOf("=") + 1);
+                        logger.debug("\tBroker Name = {}", componentDisplayName);
+                        String type = "";
+                        if(componentState.getRuntimeIdentity() != null &&
+                                componentState.getRuntimeIdentity().getConfigIdentity() != null &&
+                                componentState.getRuntimeIdentity().getConfigIdentity().getType() != null){
+                            logger.info("\tComponent Type = {}", componentState.getRuntimeIdentity().getConfigIdentity().getType());
+                            type = componentState.getRuntimeIdentity().getConfigIdentity().getType();
+                        }
+                        if(type.equalsIgnoreCase(BROKER)) {
+                            ComponentConfig brokerConfig = new ComponentConfig(componentDisplayName, componentJmxName,componentContainerName);
+                            config.getBrokerConfigs().add(brokerConfig);
+                        }
+                        else if(type.equalsIgnoreCase(CONTAINER)){
+                            ComponentConfig containerConfig = new ComponentConfig(componentDisplayName,componentJmxName,componentContainerName);
+                            config.getContainerConfigs().add(containerConfig);
+                        }
                         j++;
                     }
                 }
@@ -166,26 +205,10 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
         } catch (MalformedObjectNameException e) {
             logger.error("Something unknown happened",e);
         } finally{
-            ConnectionUtil.disconnect(client, config.getLocation());
+            JMSConnectionFactory.disconnect(client, config.getLocation());
         }
 
     }
-
-    private void printMetrics(Configuration config,Map<String, String> metrics) {
-        for(Map.Entry<String,String> entry : metrics.entrySet()){
-            printAverageAverageIndividual(config.getMetricPrefix() + entry.getKey(), entry.getValue());
-        }
-    }
-
-
-    private void printAverageAverageIndividual(String metricPath, String metricValue) {
-        printMetric(metricPath, metricValue,
-                MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,
-                MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE,
-                MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_INDIVIDUAL
-        );
-    }
-
 
     private String logVersion() {
         String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
@@ -193,32 +216,8 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
         return msg;
     }
 
-    /**
-     * A helper method to report the metrics.
-     * @param metricPath
-     * @param metricValue
-     * @param aggType
-     * @param timeRollupType
-     * @param clusterRollupType
-     */
-    private void printMetric(String metricPath,String metricValue,String aggType,String timeRollupType,String clusterRollupType) {
-        MetricWriter metricWriter = getMetricWriter(metricPath,
-                aggType,
-                timeRollupType,
-                clusterRollupType
-        );
-        //System.out.println(getLogPrefix()+"Sending [" + aggType + METRIC_SEPARATOR + timeRollupType + METRIC_SEPARATOR + clusterRollupType
-        //            + "] metric = " + metricPath + " = " + metricValue);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Sending [" + aggType + METRIC_SEPARATOR + timeRollupType + METRIC_SEPARATOR + clusterRollupType
-                    + "] metric = " + metricPath + " = " + metricValue);
-        }
-        metricWriter.printMetric(metricValue);
-    }
-
-
     public static String getImplementationVersion() {
-        return SonicMqBrokerMonitor.class.getPackage().getImplementationTitle();
+        return SonicMqMonitor.class.getPackage().getImplementationTitle();
     }
 
     private String getCanonicalHostName(String containerHost) {
@@ -228,15 +227,4 @@ public class SonicMqBrokerMonitor extends AManagedMonitor{
         return containerHost;
     }
 
-    private String getHostname() {
-        String hostname;
-        try {
-            // See http://stackoverflow.com/questions/7348711/recommended-way-to-get-hostname-in-java
-            // for information on when this will fail.
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException needToAskSystem) {
-            hostname = null;
-        }
-        return hostname;
-    }
 }

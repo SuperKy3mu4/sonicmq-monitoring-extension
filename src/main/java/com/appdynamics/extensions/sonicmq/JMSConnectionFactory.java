@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Hashtable;
 
 
-public class ConnectionUtil {
+public class JMSConnectionFactory {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(BrokerCollector.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(JMSConnectionFactory.class);
     public static final String CONNECTION_URLS = "ConnectionURLs";
     public static final String DEFAULT_USER = "DefaultUser";
     public static final String DEFAULT_PASSWORD = "DefaultPassword";
@@ -25,6 +25,7 @@ public class ConnectionUtil {
         client.connect(new JMSConnectorAddress(env), timeout);
         logger.debug("Connected to '"+ location+"'");
     }
+
 
     /**
      * Disconnects the {@link JMSConnectorClient}.

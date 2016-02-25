@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.appdynamics.extensions</groupId>
-    <artifactId>sonicmq-broker-monitoring-extension</artifactId>
-    <version>5.1.0</version>
+    <artifactId>sonicmq-monitoring-extension</artifactId>
+    <version>6.0.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -91,6 +91,13 @@
             <version>${sonicmq.version}</version>
             <systemPath>${basedir}/src/lib/sonic_mgmt_client.jar</systemPath>
     </dependency>
+        <dependency>
+            <groupId>sonic_mgmt_config</groupId>
+            <artifactId>sonic_mgmt_config</artifactId>
+            <scope>system</scope>
+            <version>8.6.0</version>
+            <systemPath>${basedir}/src/lib/mgmt_config-8.6.0.jar</systemPath>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>
@@ -170,7 +177,7 @@
                                     <fileset dir="${build.directory}" includes="${project.artifactId}.${project.packaging}"/>
                                 </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
-                                    <zipfileset dir="${target.dir}" filemode="755" prefix="SonicmqBrokerMonitor/"/>
+                                    <zipfileset dir="${target.dir}" filemode="755" prefix="SonicMqMonitor/"/>
                                 </zip>
                                 <delete dir="${target.dir}"/>
                             </target>

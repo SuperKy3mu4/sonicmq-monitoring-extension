@@ -1,14 +1,16 @@
 package com.appdynamics.extensions.sonicmq.config;
 
 
-public class BrokerConfig {
+public class ComponentConfig {
 
     private String name;
     private String jmxName;
+    private String containerName;
 
-    public BrokerConfig(String brokerName, String brokerJmxName) {
+    public ComponentConfig(String brokerName, String brokerJmxName,String containerName) {
         this.name = brokerName;
         this.jmxName = brokerJmxName;
+        this.containerName = containerName;
     }
 
     public String getName() {
@@ -17,5 +19,10 @@ public class BrokerConfig {
 
     public String getJmxName() {
         return jmxName;
+    }
+
+
+    public String getContainerName() {
+        return containerName;
     }
 }

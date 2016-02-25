@@ -3,6 +3,7 @@ package com.appdynamics.extensions.sonicmq.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Configuration {
 
@@ -15,8 +16,11 @@ public class Configuration {
     private List<String> topicExcludePatterns;
     private String metricPrefix;
     private String domain;
+    private Map<String,String> tierMap;
 
-    private List<BrokerConfig> brokerConfigs = new ArrayList<BrokerConfig>();
+    private List<ComponentConfig> brokerConfigs = new ArrayList<ComponentConfig>();
+
+    private List<ComponentConfig> containerConfigs = new ArrayList<ComponentConfig>();
 
     public String getLocation() {
         return location;
@@ -90,9 +94,19 @@ public class Configuration {
         this.domain = domain;
     }
 
-    public List<BrokerConfig> getBrokerConfigs() {
+    public List<ComponentConfig> getBrokerConfigs() {
         return brokerConfigs;
     }
 
+    public List<ComponentConfig> getContainerConfigs() {
+        return containerConfigs;
+    }
 
+    public Map<String, String> getTierMap() {
+        return tierMap;
+    }
+
+    public void setTierMap(Map<String, String> tierMap) {
+        this.tierMap = tierMap;
+    }
 }
