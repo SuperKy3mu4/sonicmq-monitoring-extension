@@ -11,7 +11,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-        <target.dir>${project.build.directory}/SonicmqBrokerMonitor</target.dir>
+        <target.dir>${project.build.directory}/SonicMqMonitor</target.dir>
         <sonicmq.version>8.5.1</sonicmq.version>
     </properties>
 
@@ -215,7 +215,7 @@
         </repository>
     </repositories>
     <scm>
-        <connection>scm:git:https://github.com/Appdynamics/sonicmq-broker-monitoring-extension.git</connection>
+        <connection>scm:git:https://github.com/Appdynamics/sonicmq-monitoring-extension.git</connection>
     </scm>
 
 </project>
