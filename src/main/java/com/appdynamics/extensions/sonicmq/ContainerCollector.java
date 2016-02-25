@@ -91,7 +91,7 @@ public class ContainerCollector extends Collector{
             String metricName = getMetricName(m.getMetricIdentity());
             if (!Strings.isNullOrEmpty(metricName)) {
                 logger.debug("Metric Name : {} ,Metric Value : {}",metricName,m.getValue());
-                metricName = metricPrefix + METRICS_SEPARATOR + name + METRICS_SEPARATOR + metricName;
+                metricName = metricPrefix + name + METRICS_SEPARATOR + metricName;
                 metrics.put(metricName, MetricUtils.toWholeNumberString(m.getValue()));
             }
         }

@@ -1,10 +1,10 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
 
-#This will create this metric in all the tiers, under this path
+#This will create this metric in all the tiers, under this path. Please make sure to have a trailing |
 #metricPrefix: Custom Metrics|SonicMq|
 
-#This will create it in specific Tier. Replace <TIER_NAME>
-metricPrefix: Server|Component:<TIER_NAME>|Custom Metrics|SonicMq
+#This will create it in specific Tier. Replace <TIER_NAME>. Please make sure to have a trailing |
+metricPrefix: Server|Component:<TIER_NAME>|Custom Metrics|SonicMq|
 
 #location for eg. tcp://localhost:2506
 location: ""

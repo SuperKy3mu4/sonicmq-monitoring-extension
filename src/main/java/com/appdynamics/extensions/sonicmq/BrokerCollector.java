@@ -91,9 +91,9 @@ public class BrokerCollector extends Collector{
         try {
 
             IBrokerProxy proxy = ProxyUtil.getBrokerProxy(client, brokerJmxName);
-            metrics.put(metricPrefix + METRICS_SEPARATOR + brokerName + METRICS_SEPARATOR + "IsPrimary", getReplicationType(proxy));
-            metrics.put(metricPrefix + METRICS_SEPARATOR + brokerName + METRICS_SEPARATOR + "IsActive",proxy.getState().toString());
-            metrics.put(metricPrefix + METRICS_SEPARATOR + brokerName + METRICS_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
+            metrics.put(metricPrefix + brokerName + METRICS_SEPARATOR + "IsPrimary", getReplicationType(proxy));
+            metrics.put(metricPrefix + brokerName + METRICS_SEPARATOR + "IsActive",proxy.getState().toString());
+            metrics.put(metricPrefix + brokerName + METRICS_SEPARATOR + "ReplicationState", proxy.getReplicationState().toString());
             if(isReplicationStateActive(proxy)) {
                 //set instance metrics
                 collectBrokerMetrics(proxy, brokerName, metrics, config.getQueueExcludePatterns(),metricPrefix);
@@ -137,7 +137,7 @@ public class BrokerCollector extends Collector{
                     if(topics != null){
                         for(IDurableSubscriptionData topic : topics){
                             if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
-                                String topicMetricPrefix = metricPrefix + METRICS_SEPARATOR + brokerName + METRICS_SEPARATOR + "users" + METRICS_SEPARATOR +
+                                String topicMetricPrefix = metricPrefix + brokerName + METRICS_SEPARATOR + "users" + METRICS_SEPARATOR +
                                         user + METRICS_SEPARATOR + "topics" + METRICS_SEPARATOR + topic.getTopicName() + METRICS_SEPARATOR;
                                 metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
                                 metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
@@ -167,7 +167,7 @@ public class BrokerCollector extends Collector{
             String metricName = getMetricName(m.getMetricIdentity());
             if (!Strings.isNullOrEmpty(metricName) && !isExcluded(metricName,excludePatterns)) {
                 logger.debug("Metric Name : {} ,Metric Value : {}",metricName,m.getValue());
-                metricName = metricPrefix + METRICS_SEPARATOR + brokerName + METRICS_SEPARATOR + metricName;
+                metricName = metricPrefix + brokerName + METRICS_SEPARATOR + metricName;
                 metrics.put(metricName, MetricUtils.toWholeNumberString(m.getValue()));
             }
         }
