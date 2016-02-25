@@ -36,7 +36,7 @@ public class SonicMqMonitor extends AManagedMonitor{
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SonicMqMonitor.class);
     public static final String CONFIG_ARG = "config-file";
     public static final String BROKER = "MQ_BROKER";
-    public static final String CONTAINER = "MQ_CONTAINER";
+    public static final String CONTAINER = "MF_CONTAINER";
     private volatile boolean initialized;
     private Configuration config;
 
