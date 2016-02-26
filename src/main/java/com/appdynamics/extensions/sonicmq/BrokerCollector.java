@@ -137,8 +137,10 @@ public class BrokerCollector extends Collector{
                     if(topics != null){
                         for(IDurableSubscriptionData topic : topics){
                             if(!isExcluded(topic.getTopicName(),topicExcludePatterns)){
+                                String name = topic.getTopicName();
+                                name = Util.replace(name,METRICS_SEPARATOR,"");
                                 String topicMetricPrefix = metricPrefix + brokerName + METRICS_SEPARATOR + "users" + METRICS_SEPARATOR +
-                                        user + METRICS_SEPARATOR + "topics" + METRICS_SEPARATOR + topic.getTopicName() + METRICS_SEPARATOR;
+                                        user + METRICS_SEPARATOR + "topics" + METRICS_SEPARATOR + name + METRICS_SEPARATOR;
                                 metrics.put(topicMetricPrefix + "MessageCount", MetricUtils.toWholeNumberString(topic.getMessageCount()));
                                 metrics.put(topicMetricPrefix + "TotalMessageSize", MetricUtils.toWholeNumberString(topic.getMessageSize()));
                             }
@@ -179,7 +181,9 @@ public class BrokerCollector extends Collector{
         StringBuffer str = new StringBuffer();
         if(metricIdentity != null && metricIdentity.getNameComponents()!= null){
             for(int i=0;i < metricIdentity.getNameComponents().length; i++){
-                str.append(metricIdentity.getNameComponents()[i]);
+                String comp = metricIdentity.getNameComponents()[i];
+                comp = Util.replace(comp, METRICS_SEPARATOR,"");
+                str.append(comp);
                 if(i != metricIdentity.getNameComponents().length - 1){
                     str.append(METRICS_SEPARATOR);
                 }

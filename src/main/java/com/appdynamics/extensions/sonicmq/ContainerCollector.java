@@ -104,7 +104,9 @@ public class ContainerCollector extends Collector{
         StringBuffer str = new StringBuffer();
         if(metricIdentity != null && metricIdentity.getNameComponents()!= null){
             for(int i=0;i < metricIdentity.getNameComponents().length; i++){
-                str.append(metricIdentity.getNameComponents()[i]);
+                String comp = metricIdentity.getNameComponents()[i];
+                comp = Util.replace(comp,METRICS_SEPARATOR,"");
+                str.append(comp);
                 if(i != metricIdentity.getNameComponents().length - 1){
                     str.append(METRICS_SEPARATOR);
                 }

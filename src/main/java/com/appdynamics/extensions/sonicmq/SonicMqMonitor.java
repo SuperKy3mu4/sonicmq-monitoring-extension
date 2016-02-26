@@ -157,8 +157,10 @@ public class SonicMqMonitor extends AManagedMonitor{
             for (IState aContainerState : containerStates) {
                 IContainerState containerState = (IContainerState) aContainerState;
                 logger.debug("*********Container Info # {} ********", i);
-                logger.debug("Container Canonical Name = {}", containerState.getRuntimeIdentity().getCanonicalName());
-                logger.debug("Container Name = {}", containerState.getRuntimeIdentity().getContainerName());
+                String containerJmxName = containerState.getRuntimeIdentity().getCanonicalName();
+                logger.debug("Container Canonical Name = {}", containerJmxName);
+                String containerDisplayName = containerState.getRuntimeIdentity().getContainerName();
+                logger.debug("Container Name = {}", containerDisplayName);
                 logger.debug("Container Domain Name = {}", containerState.getRuntimeIdentity().getDomainName());
                 String containerHost = containerState.getContainerHost();
                 containerHost = getCanonicalHostName(containerHost);
@@ -189,7 +191,7 @@ public class SonicMqMonitor extends AManagedMonitor{
                             config.getBrokerConfigs().add(brokerConfig);
                         }
                         else if(type.equalsIgnoreCase(CONTAINER)){
-                            ComponentConfig containerConfig = new ComponentConfig(componentDisplayName,componentJmxName,componentContainerName);
+                            ComponentConfig containerConfig = new ComponentConfig(containerDisplayName,containerJmxName,containerDisplayName);
                             config.getContainerConfigs().add(containerConfig);
                         }
                         j++;

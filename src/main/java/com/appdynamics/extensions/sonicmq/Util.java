@@ -3,6 +3,8 @@ package com.appdynamics.extensions.sonicmq;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import static com.appdynamics.extensions.util.metrics.MetricConstants.METRICS_SEPARATOR;
+
 public class Util {
 
     public static final String TIER_NAME = "-Dappdynamics.agent.tierName=";
@@ -33,4 +35,12 @@ public class Util {
         }
         return tierName;
     }
+
+    public static String replace(String subject,String strToReplace,String replaceWith) {
+        if(subject == null || strToReplace == null || replaceWith == null){
+            return subject;
+        }
+        return subject.replace(strToReplace,replaceWith);
+    }
+
 }
