@@ -151,7 +151,8 @@ public class SonicMqMonitor extends AManagedMonitor{
             logger.debug("The domain is {}", domain);
             String hostname = Util.getHostname();
             logger.debug("The hostname for this machine is {}",hostname);
-            IAgentManagerProxy agentManagerProxy = ProxyUtil.getAgentManagerProxy(client, domain);
+            String jmxName = domain + "." + IAgentManagerProxy.GLOBAL_ID + ":ID=" + IAgentManagerProxy.GLOBAL_ID;
+            IAgentManagerProxy agentManagerProxy = ProxyUtil.getAgentManagerProxy(client, jmxName);
             IState[] containerStates = agentManagerProxy.getCollectiveState();
             int i=1;
             for (IState aContainerState : containerStates) {

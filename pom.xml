@@ -6,7 +6,7 @@
 
     <groupId>com.appdynamics.extensions</groupId>
     <artifactId>sonicmq-monitoring-extension</artifactId>
-    <version>6.5.0</version>
+    <version>6.6.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
