@@ -191,7 +191,7 @@ public class SonicMqMonitor extends AManagedMonitor{
                             config.getBrokerConfigs().add(brokerConfig);
                         }
                         else if(type.equalsIgnoreCase(CONTAINER)){
-                            ComponentConfig containerConfig = new ComponentConfig(containerDisplayName,containerJmxName,containerDisplayName);
+                            ComponentConfig containerConfig = new ComponentConfig(containerDisplayName,componentJmxName,containerDisplayName);
                             config.getContainerConfigs().add(containerConfig);
                         }
                         j++;

@@ -15,8 +15,7 @@ public class ProxyUtil {
         return MQProxyFactory.createBrokerProxy(client, new ObjectName(jmxName));
     }
 
-    public static IAgentManagerProxy getAgentManagerProxy(JMSConnectorClient client, String domain) throws MalformedObjectNameException {
-        ObjectName jmxName = new ObjectName(domain + "." + IAgentManagerProxy.GLOBAL_ID + ":ID=" + IAgentManagerProxy.GLOBAL_ID);
-        return MFProxyFactory.createAgentManagerProxy(client, jmxName);
+    public static IAgentManagerProxy getAgentManagerProxy(JMSConnectorClient client, String jmxName) throws MalformedObjectNameException {
+        return MFProxyFactory.createAgentManagerProxy(client, new ObjectName(jmxName));
     }
 }
