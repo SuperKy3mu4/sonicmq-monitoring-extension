@@ -191,11 +191,10 @@ public class SonicMqMonitor extends AManagedMonitor{
                             ComponentConfig brokerConfig = new ComponentConfig(componentDisplayName, componentJmxName,componentContainerName);
                             config.getBrokerConfigs().add(brokerConfig);
                         }
-                        else if(type.equalsIgnoreCase(CONTAINER)){
-                            String containerJMXName = domain + "." + containerDisplayName + ":ID=" + IAgentManagerProxy.GLOBAL_ID;
-                            ComponentConfig containerConfig = new ComponentConfig(containerDisplayName,containerJMXName,containerDisplayName);
-                            config.getContainerConfigs().add(containerConfig);
-                        }
+                        //else if(type.equalsIgnoreCase(CONTAINER)){
+                        //    ComponentConfig containerConfig = new ComponentConfig(containerDisplayName,componentJmxName,containerDisplayName);
+                        //    config.getContainerConfigs().add(containerConfig);
+                        //}
                         j++;
                     }
                 }
